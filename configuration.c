@@ -19,7 +19,9 @@
 #include <sys/stat.h>
 #include <syslog.h>
 
+#ifdef __sun
 #include <netinet/ip_compat.h>
+#endif  /* __sun */
 
 #include "configuration.h"
 #include "version.h"
@@ -577,7 +579,8 @@ void config_param_validate (char *k, char *v, stud_config *cfg, char *file, int 
     r = config_param_val_int_pos(v, &cfg->TCP_KEEPALIVE_TIME);
   }
   else if (strcmp(k, CFG_MAX_SEND_FRAGMENT) == 0) {
-    r = config_param_val_int_pos(v, &cfg->MAX_SEND_FRAGMENT);
+    r = config_param_val_int(v, &cfg->MAX_SEND_FRAGMENT);
+    if (r && cfg->MAX_SEND_FRAGMENT < 0) cfg->MAX_SEND_FRAGMENT = 0;
   }
 #ifdef USE_SHARED_CACHE
   else if (strcmp(k, CFG_SHARED_CACHE) == 0) {

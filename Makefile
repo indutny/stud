@@ -6,12 +6,13 @@ DESTDIR =
 PREFIX  = /usr/local
 BINDIR  = $(PREFIX)/bin
 MANDIR  = $(PREFIX)/share/man
+PLATFORM = $(shell sh -c 'uname -s | tr "[A-Z]" "[a-z]"')
 
-LDFLAGS=-g -lm -lsocket -lnsl -m64 -L/opt/local/lib -Wl,-R/opt/local/lib
-CC=gcc
-CFLAGS=-O2 -m64 -Ideps/libev -Ideps/openssl/include -Ideps/ringbuffer -g
-OBJS    =stud_provider.o stud.o deps/ringbuffer/ringbuffer.o configuration.o \
-				 deps/libev/.libs/libev.a deps/openssl/libssl.a deps/openssl/libcrypto.a
+LDFLAGS = -g -lm -m64
+CC ?= gcc
+CFLAGS = -O2 -m64 -Ideps/libev -Ideps/ringbuffer -g
+OBJS = stud.o deps/ringbuffer/ringbuffer.o configuration.o \
+       deps/libev/.libs/libev.a
 
 all: realall
 
@@ -35,6 +36,36 @@ ifneq ($(NO_CONFIG_FILE),)
 CFLAGS += -DNO_CONFIG_FILE
 endif
 
+ifeq ($(SHARED_OPENSSL),1)
+LDFLAGS += -lssl -lcrypto
+else
+CPPFLAGS += -Ideps/openssl/include
+OBJS += deps/openssl/libssl.a deps/openssl/libcrypto.a
+
+# Forward dependency
+deps/openssl/libssl.a: deps/openssl/libcrypto.a
+
+ifeq ($(PLATFORM),darwin)
+OPENSSL_PLATFORM = darwin64-x86_64-cc
+else ifeq ($(PLATFORM),sunos)
+OPENSSL_PLATFORM = solaris64-x86_64-gcc
+else
+OPENSSL_PLATFORM = linux-x86_64
+endif
+
+deps/openssl/libcrypto.a:
+	cd deps/openssl && ./Configure no-idea no-mdc2 no-rc5 enable-tlsext \
+		$(OPENSSL_PLATFORM)
+	-$(MAKE) $(MAKEFLAGS) -C deps/openssl depend
+	-$(MAKE) $(MAKEFLAGS) -C deps/openssl
+
+endif
+
+ifeq ($(PLATFORM),sunos)
+
+LDFLAGS += -lsocket -lnsl -L/opt/local/lib -Wl,-R/opt/local/lib
+CFLAGS += -DSTUD_DTRACE=1
+
 stud_provider.h: stud_provider.d
 	dtrace -64 -h -xnolibs -s $^ -o $@
 
@@ -42,6 +73,9 @@ stud_provider.o: stud.o stud_provider.d
 	dtrace -64 -G -xnolibs -s stud_provider.d -o $@ stud.o
 
 ALL += stud_provider.h
+else
+LDFLAGS += -ldl
+endif
 
 ALL += stud
 realall: $(ALL)
@@ -54,14 +88,6 @@ deps/libev/.libs/libev.a: deps/libev/Makefile
 
 deps/libev/Makefile:
 	cd deps/libev && ./configure
-
-# Forward dependency
-deps/openssl/libssl.a: deps/openssl/libcrypto.a
-
-deps/openssl/libcrypto.a:
-	cd deps/openssl && ./Configure no-idea no-mdc2 no-rc5 enable-tlsext solaris64-x86_64-gcc
-	-$(MAKE) $(MAKEFLAGS) -C deps/openssl depend
-	-$(MAKE) $(MAKEFLAGS) -C deps/openssl
 
 stud.o: deps/ringbuffer/ringbuffer.h
 

@@ -65,7 +65,19 @@
 #include <openssl/asn1.h>
 #include <ev.h>
 
-#include "stud_provider.h"
+#ifdef STUD_DTRACE
+# include "stud_provider.h"
+#else  /* STUD_DTRACE */
+# define STUD_CLOSE_SIDE_ENABLED() 0
+# define STUD_SSL_CIPHER_ENABLED() 0
+# define STUD_SSL_SESSION_REUSE_ENABLED() 0
+
+# define STUD_CLOSE_SIDE(a, b, c) do { } while (0)
+# define STUD_SSL_CIPHER(a, b, c) do { } while (0)
+# define STUD_SSL_SESSION_REUSE(a, b, c) do { } while (0)
+# define STUD_SSL_SESSION_NEW(a, b, c) do { } while (0)
+#endif  /* STUD_DTRACE */
+
 #include "ringbuffer.h"
 #include "shctx.h"
 #include "configuration.h"
@@ -187,9 +199,8 @@ typedef struct proxystate {
 
 static int get_client_info(proxystate* ps, char* host, size_t host_size) {
     struct sockaddr_in* addr = (struct sockaddr_in*) &ps->remote_ip;
-
     if (addr->sin_family == AF_INET) {
-        inet_ntoa_r(addr->sin_addr, host, host_size);
+        inet_ntop(AF_INET, &(addr->sin_addr), host, host_size);
     }
     else if (addr->sin_family == AF_INET6 ) {
         struct sockaddr_in6* addr6 = (struct sockaddr_in6*) addr;
@@ -230,7 +241,7 @@ static void settcpkeepalive(int fd) {
         ERR("Error activating SO_KEEPALIVE on client socket: %s", strerror(errno));
     }
 
-#ifdef TCP_KEEPIDLE
+#ifdef TCP_KEEPALIVE
     optval = CONFIG->TCP_KEEPALIVE_TIME;
     optlen = sizeof(optval);
     if(setsockopt(fd, SOL_TCP, TCP_KEEPALIVE, &optval, optlen) < 0) {
