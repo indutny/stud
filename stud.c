@@ -661,7 +661,7 @@ SSL_CTX *make_ctx(const char *pemfile) {
 
 #if defined(SSL_CTX_set_max_send_fragment)
     if (CONFIG->MAX_SEND_FRAGMENT) {
-        SSL_CTX_set_max_send_fragment(CONFIG->MAX_SEND_FRAGMENT);
+        SSL_CTX_set_max_send_fragment(ctx, CONFIG->MAX_SEND_FRAGMENT);
     }
 #endif /* defined(SSL_CTX_set_max_send_fragment) */
 
