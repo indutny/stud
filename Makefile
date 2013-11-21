@@ -65,6 +65,7 @@ ifeq ($(PLATFORM),sunos)
 
 LDFLAGS += -lsocket -lnsl -L/opt/local/lib -Wl,-R/opt/local/lib
 CFLAGS += -DSTUD_DTRACE=1
+OBJS += stud_provider.o
 
 stud_provider.h: stud_provider.d
 	dtrace -64 -h -xnolibs -s $^ -o $@
