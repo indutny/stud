@@ -49,7 +49,10 @@
 #include <syslog.h>
 #include <stdarg.h>
 
+#ifdef __sun
 #include <sys/filio.h>
+#endif  /* __sun */
+
 #include <sys/signal.h>
 
 #include <ctype.h>
