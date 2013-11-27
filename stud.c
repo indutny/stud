@@ -1473,7 +1473,6 @@ static void handle_accept(struct ev_loop *loop, ev_io *w, int revents) {
 	  break;
 
         default:
-	  fprintf(stderr, "server socket accept returned -1, errno is: %d\n", errno);
             assert(errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN);
             break;
         }

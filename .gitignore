@@ -1,4 +1,6 @@
 /conf
+/deps/libev/.libs/
+/deps/libev/.deps/
 ebtree*
 core
 core.*
