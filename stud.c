@@ -244,7 +244,15 @@ static void settcpkeepalive(int fd) {
         ERR("Error activating SO_KEEPALIVE on client socket: %s", strerror(errno));
     }
 
-#ifdef TCP_KEEPALIVE
+#ifdef TCP_KEEPIDLE
+    optval = CONFIG->TCP_KEEPALIVE_TIME;
+    optlen = sizeof(optval);
+    if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &optval, optlen) < 0) {
+        ERR("Error setting TCP_KEEPALIVE on client socket: %s", strerror(errno));
+    }
+#endif
+
+#if defined(TCP_KEEPALIVE) && !defined(__sun)
     optval = CONFIG->TCP_KEEPALIVE_TIME;
     optlen = sizeof(optval);
     if(setsockopt(fd, SOL_TCP, TCP_KEEPALIVE, &optval, optlen) < 0) {

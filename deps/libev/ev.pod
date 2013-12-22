@@ -5249,7 +5249,7 @@ libraries and raw winsocket select is:
    #define EV_SELECT_IS_WINSOCKET 1   /* forces EV_SELECT_USE_FD_SET, too */
 
 Note that winsockets handling of fd sets is O(n), so you can easily get a
-complexity in the O(n²) range when using win32.
+complexity in the O(n^2) range when using win32.
 
 =head3 Limited number of file descriptors
 
