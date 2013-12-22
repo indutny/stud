@@ -5274,7 +5274,7 @@ by calling C<_setmaxstdio>, which can increase this limit to C<2048>
 runtime libraries. This might get you to about C<512> or C<2048> sockets
 (depending on windows version and/or the phase of the moon). To get more,
 you need to wrap all I/O functions and provide your own fd management, but
-the cost of calling select (O(n²)) will likely make this unworkable.
+the cost of calling select (O(n^2)) will likely make this unworkable.
 
 =head2 PORTABILITY REQUIREMENTS
 
